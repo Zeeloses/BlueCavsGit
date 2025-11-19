@@ -1,0 +1,144 @@
+/*
+Copyright 2025 FIRST Tech Challenge Team 30332
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+associated documentation files (the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial
+portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
+
+/**
+ * +
+ * This file contains a minimal example of a Linear "OpMode". An OpMode is a 'program' that runs
+ * in either the autonomous or the TeleOp period of an FTC match. The names of OpModes appear on
+ * the menu of the FTC Driver Station. When an selection is made from the menu, the corresponding
+ * OpMode class is instantiated on the Robot Controller and executed.
+ *
+ * Remove the @Disabled annotation on the next line or two (if present) to add this OpMode to the
+ * Driver Station OpMode list, or add a @Disabled annotation to prevent this OpMode from being
+ * added to the Driver Station.
+ */
+@TeleOp
+
+public class BlueMain extends LinearOpMode {
+    //DRIVE MOTOR ESTABLISHEMENT
+    private DcMotor left_wheel, right_wheel, launcher_motor, gate_motor;
+    private Servo arm_servo;
+
+    @Override
+    public void runOpMode() {
+        //HARDWARE LEGEND
+        left_wheel = hardwareMap.get(DcMotor.class, "left_wheel");
+        right_wheel = hardwareMap.get(DcMotor.class, "right_wheel");
+        launcher_motor = hardwareMap.get(DcMotor.class, "launcher_motor");
+        gate_motor = hardwareMap.get(DcMotor.class, "gate_motor");
+        arm_servo = hardwareMap.get(Servo.class, "arm_servo");
+
+        //MOTOR DIRECTIONS ARE OPPOSITE TO SIDE
+        left_wheel.setDirection(DcMotorSimple.Direction.REVERSE);
+        right_wheel.setDirection(DcMotorSimple.Direction.FORWARD);
+        launcher_motor.setDirection(DcMotorSimple.Direction.FORWARD);
+        gate_motor.setDirection(DcMotorSimple.Direction.REVERSE);
+        //BREAK BEHAVIOR
+        left_wheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        right_wheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        launcher_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        gate_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        telemetry.addData("Status", "Online");
+        telemetry.update();
+        waitForStart();
+
+        //TUNING CONSTANTS
+        final double DRIVE_SCALE_FULL = 1.0;
+        final double DRIVE_SCALE_PRECISION = 0.4;
+        final double LAUNCH_MAIN_POWER = 0.6;
+
+        final double GATE_POWER = 0.5;
+        final double ARM_SERVO = 1.0;
+        //VARS
+        boolean yPressed = false;
+
+        // run until the end of the match (driver presses STOP)
+        while (opModeIsActive()) {
+            // LEFT STICK DRIVE CONTROLS
+            double drive = -gamepad1.left_stick_y;
+            double turn = gamepad1.right_stick_x;
+            double leftPower = drive + turn;
+            double rightPower = drive - turn;
+
+            //NORMALIZE NUMBERS
+            double max = Math.max(1.0, Math.max(Math.abs(leftPower), Math.abs(rightPower)));
+            leftPower /= max;
+            rightPower /= max;
+
+
+            double driveScale = gamepad1.right_bumper ? DRIVE_SCALE_PRECISION : DRIVE_SCALE_FULL;
+            left_wheel.setPower(leftPower * driveScale);
+            right_wheel.setPower(rightPower * driveScale);
+
+            //arm_servo configs
+            double armPower = -1.0;
+            boolean aButton = gamepad1.a;
+            if (aButton) {
+                armPower = 1.0;
+            }
+            telemetry.addData("armPower",armPower);
+            telemetry.update();
+            arm_servo.setPosition(armPower);
+
+            //LAUNCHER MOTOR CONTROLS
+            boolean yButton = gamepad1.yWasPressed();
+            // double mainPower = 0.0;
+            if (yButton && yPressed){
+                yPressed = false;
+                launcher_motor.setPower(0.0);
+            } else if (yButton && !yPressed) {
+                yPressed = true;
+                launcher_motor.setPower(LAUNCH_MAIN_POWER);
+            }
+
+            //GATE MOTOR CONTROLS
+            boolean xButton = gamepad1.x;
+            double gatePower = 0.0;
+            if (xButton) {
+                gatePower = GATE_POWER;
+            }
+            else {
+                gatePower = 0.0;
+            }
+            gate_motor.setPower(gatePower);
+
+
+            //telemetry
+            telemetry.addData("DRIVE L", "%.2f", leftPower * driveScale);
+            telemetry.addData("DRIVE R", "%.2f", rightPower * driveScale);
+            telemetry.addData("ARM_SERVO", "%.2f", armPower);
+            // telemetry.addData("LAUNCHER_MOTOR", "%.2f", armPower);
+            telemetry.update();
+        }
+
+        //cleanup
+        left_wheel.setPower(0.0);
+        right_wheel.setPower(0.0);
+        arm_servo.setPosition(0.0);
+        launcher_motor.setPower(0.0);
+    }
+}
