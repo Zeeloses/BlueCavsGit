@@ -23,6 +23,8 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
+import java.util.Locale;
+
 /**
  * This file contains a minimal example of a Linear "OpMode". An OpMode is a 'program' that runs
  * in either the autonomous or the TeleOp period of an FTC match. The names of OpModes appear on
@@ -70,16 +72,48 @@ public class BlueAuto extends LinearOpMode {
 
         // run until the end of the match (driver presses STOP)
         if (opModeIsActive()) {
-
-
+            driveRobot(30,"FORWARD",1500);
         }
     }
-
-    void turnRobot(int power, String direction, int degree) {
-            if (direction.equals("left") || direction.equals("Left")) {
-                left_wheel.setPower(-power);
-                right_wheel.setPower(power);
-
+    int calculateTurnTime(int degrees) {
+        int baseTime = (degrees*300)/90;
+        if (degrees > 180) {
+            baseTime = (int)(baseTime*.94);
         }
+        else if (degrees > 90) {
+            baseTime = (int)(baseTime*.96);
+        }
+        return baseTime;
+    }
+    void turnRobot(String direction, int degrees) {
+        int power = 50;
+        int turnTime = calculateTurnTime(degrees);
+        if (direction.equalsIgnoreCase("left")) {
+            left_wheel.setPower(-power);
+            right_wheel.setPower(power);
+        }
+        else {
+            left_wheel.setPower(power);
+            right_wheel.setPower(-power);
+        }
+        sleep(turnTime);
+        left_wheel.setPower(0);
+        right_wheel.setPower(0);
+    }
+    void driveRobot(int power, String direction, int time) {
+        telemetry.addData("sent", "sent");
+        telemetry.update();
+        if (direction.equalsIgnoreCase("reverse")) {
+            left_wheel.setPower(-power);
+            right_wheel.setPower(-power);
+        }
+        else {
+                left_wheel.setPower(power);
+                right_wheel.setPower(power);
+            }
+        sleep(time);
+        left_wheel.setPower(0);
+        right_wheel.setPower(0);
+
     }
 }

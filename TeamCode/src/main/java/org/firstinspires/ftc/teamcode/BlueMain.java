@@ -54,7 +54,7 @@ public class BlueMain extends LinearOpMode {
         //MOTOR DIRECTIONS ARE OPPOSITE TO SIDE
         left_wheel.setDirection(DcMotorSimple.Direction.REVERSE);
         right_wheel.setDirection(DcMotorSimple.Direction.FORWARD);
-        launcher_motor.setDirection(DcMotorSimple.Direction.FORWARD);
+        launcher_motor.setDirection(DcMotorSimple.Direction.REVERSE);
         gate_motor.setDirection(DcMotorSimple.Direction.REVERSE);
         //BREAK BEHAVIOR
         left_wheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -69,7 +69,7 @@ public class BlueMain extends LinearOpMode {
         //TUNING CONSTANTS
         final double DRIVE_SCALE_FULL = 1.0;
         final double DRIVE_SCALE_PRECISION = 0.4;
-        final double LAUNCH_MAIN_POWER = 0.6;
+        final double LAUNCH_MAIN_POWER = .6;
 
         final double GATE_POWER = 0.5;
         final double ARM_SERVO = 1.0;
