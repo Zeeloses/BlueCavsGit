@@ -23,8 +23,6 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
-import java.util.Locale;
-
 /**
  * This file contains a minimal example of a Linear "OpMode". An OpMode is a 'program' that runs
  * in either the autonomous or the TeleOp period of an FTC match. The names of OpModes appear on
@@ -37,7 +35,7 @@ import java.util.Locale;
  */
 @Autonomous
 
-public class BlueAuto extends LinearOpMode {
+public class BlueAuto_Far_Blue extends LinearOpMode {
     private DcMotor left_wheel, right_wheel;
 
 
@@ -72,7 +70,9 @@ public class BlueAuto extends LinearOpMode {
 
         // run until the end of the match (driver presses STOP)
         if (opModeIsActive()) {
-            driveRobot(30,"FORWARD",1500);
+            driveRobot(60,"forward",1500);
+            turnRobot("left",45);
+            driveRobot(50,"forward",1000);
         }
     }
     int calculateTurnTime(int degrees) {
