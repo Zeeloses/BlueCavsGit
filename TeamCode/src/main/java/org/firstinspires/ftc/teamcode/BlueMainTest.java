@@ -18,13 +18,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 */
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 /**
+ * +
  * This file contains a minimal example of a Linear "OpMode". An OpMode is a 'program' that runs
  * in either the autonomous or the TeleOp period of an FTC match. The names of OpModes appear on
  * the menu of the FTC Driver Station. When an selection is made from the menu, the corresponding
@@ -34,16 +35,16 @@ import com.qualcomm.robotcore.hardware.Servo;
  * Driver Station OpMode list, or add a @Disabled annotation to prevent this OpMode from being
  * added to the Driver Station.
  */
-@Autonomous
+@TeleOp
 
-public class BlueAuto_Close extends LinearOpMode {
-    private DcMotor left_wheel, right_wheel, launcher_motor,gate_motor;
+public class BlueMainTest extends LinearOpMode {
+    //DRIVE MOTOR ESTABLISHEMENT
+    private DcMotor left_wheel, right_wheel, launcher_motor, gate_motor;
     private Servo arm_servo;
-
 
     @Override
     public void runOpMode() {
-        //HARDWARE
+        //HARDWARE LEGEND
         left_wheel = hardwareMap.get(DcMotor.class, "left_wheel");
         right_wheel = hardwareMap.get(DcMotor.class, "right_wheel");
         launcher_motor = hardwareMap.get(DcMotor.class, "launcher_motor");
@@ -61,100 +62,86 @@ public class BlueAuto_Close extends LinearOpMode {
         launcher_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         gate_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-
-        left_wheel.setPower(0);
-        right_wheel.setPower(0);
-        //VARS
-        //CONST
-
-
-        left_wheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        right_wheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-
-
-        telemetry.addData("Status", "Initialized");
+        telemetry.addData("Status", "Online");
         telemetry.update();
-        // Wait for the game to start (driver presses PLAY)
         waitForStart();
-        arm_servo.setPosition(-1);
-        // run until the end of the match (driver presses STOP)
-        if (opModeIsActive()) {
-            driveRobot(5,"REVERSE",100);
-            sleep(1000);
-            shoot();
-            turnRobot("left",45);
-            driveRobot(30,"forward",750);
-        }
-    }
-    void shoot() {
+///////////////////////////////////////////////////
+        //TUNING CONSTANTS
+        final double MAX_SPEED = .8;
+        final double MIN_SPEED = .1;
+        final double DRIVE_ACCELERATION = MAX_SPEED/5;
         final double LAUNCH_MAIN_POWER = .6;
-
         final double GATE_POWER = 0.5;
         final double ARM_SERVO = 1.0;
+        //VARS
+        boolean yPressed = false;
 
-        launcher_motor.setPower(LAUNCH_MAIN_POWER);
-        sleep(4000);
-        //1st
-        gate_motor.setPower(GATE_POWER);
-        sleep(1000);
-        gate_motor.setPower(0);
-        sleep(500);
-        //2nd
-        arm_servo.setPosition(1); // arm
-        sleep(500);
-        gate_motor.setPower(GATE_POWER);
-        sleep(1000);
-        arm_servo.setPosition(-1);
-        sleep(500);
-        //3rd
-        arm_servo.setPosition(1); // arm
-        sleep(500);
-        gate_motor.setPower(GATE_POWER);
-        sleep(1000);
-        arm_servo.setPosition(-1);
-        sleep(500);
-    }
-    int calculateTurnTime(int degrees)
-    {
-        int baseTime = (degrees*300)/90;
-        if (degrees > 180) {
-            baseTime = (int)(baseTime*.94);
-        }
-        else if (degrees > 90) {
-            baseTime = (int)(baseTime*.96);
-        }
-        return baseTime;
-    }
-    void turnRobot(String direction, int degrees) {
-        int power = 50;
-        int turnTime = calculateTurnTime(degrees);
-        if (direction.equalsIgnoreCase("left")) {
-            left_wheel.setPower(-power);
-            right_wheel.setPower(power);
-        }
-        else {
-            left_wheel.setPower(power);
-            right_wheel.setPower(-power);
-        }
-        sleep(turnTime);
-        left_wheel.setPower(0);
-        right_wheel.setPower(0);
-    }
-    void driveRobot(int power, String direction, int time) {
-        telemetry.addData("sent", "sent");
-        telemetry.update();
-        if (direction.equalsIgnoreCase("reverse")) {
-            left_wheel.setPower(-power);
-            right_wheel.setPower(-power);
-        }
-        else {
-                left_wheel.setPower(power);
-                right_wheel.setPower(power);
+        // run until the end of the match (driver presses STOP)
+        while (opModeIsActive()) {
+            // LEFT STICK DRIVE CONTROLS
+            double drive = -gamepad1.left_stick_y;
+            double turn = gamepad1.right_stick_x;
+            double leftPower = drive + turn;
+            double rightPower = drive - turn;
+
+            //NORMALIZE NUMBERS
+            double max = Math.max(1.0, Math.max(Math.abs(leftPower), Math.abs(rightPower)));
+            if (drive > 0) {
+
             }
-        sleep(time);
-        left_wheel.setPower(0);
-        right_wheel.setPower(0);
+            leftPower += max/DRIVE_ACCELERATION;
+            rightPower += max/DRIVE_ACCELERATION;
 
+
+//            double driveScale = gamepad1.right_bumper ? DRIVE_SCALE_PRECISION : DRIVE_SCALE_FULL;
+            left_wheel.setPower(leftPower);
+            right_wheel.setPower(rightPower);
+/////////////////////////////////////////////
+            //arm_servo configs
+            double armPower = -1.0;
+            boolean aButton = gamepad1.a;
+            if (aButton) {
+                armPower = 1.0;
+            }
+            telemetry.addData("armPower",armPower);
+            telemetry.update();
+            arm_servo.setPosition(armPower);
+
+            //LAUNCHER MOTOR CONTROLS
+            boolean yButton = gamepad1.yWasPressed();
+            // double mainPower = 0.0;
+            if (yButton && yPressed){
+                yPressed = false;
+                launcher_motor.setPower(0.0);
+            } else if (yButton && !yPressed) {
+                yPressed = true;
+                launcher_motor.setPower(LAUNCH_MAIN_POWER);
+            }
+
+            //GATE MOTOR CONTROLS
+            boolean xButton = gamepad1.x;
+            double gatePower = 0.0;
+            if (xButton) {
+                gatePower = GATE_POWER;
+            }
+            else {
+                gatePower = 0.0;
+            }
+            gate_motor.setPower(gatePower);
+
+
+            //telemetry
+            telemetry.addData("DRIVE L", "%.2f", leftPower );
+            telemetry.addData("DRIVE R", "%.2f", rightPower);
+            telemetry.addData("ARM_SERVO", "%.2f", armPower);
+            // telemetry.addData("LAUNCHER_MOTOR", "%.2f", armPower);
+            telemetry.update();
+        }
+
+        //cleanup
+        left_wheel.setPower(0.0);
+        right_wheel.setPower(0.0);
+        arm_servo.setPosition(0.0);
+        launcher_motor.setPower(0.0);
     }
 }
