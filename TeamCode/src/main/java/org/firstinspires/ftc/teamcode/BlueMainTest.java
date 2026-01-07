@@ -65,77 +65,70 @@ public class BlueMainTest extends LinearOpMode {
         telemetry.addData("Status", "Online");
         telemetry.update();
         waitForStart();
-///////////////////////////////////////////////////
+
         //TUNING CONSTANTS
         final double MAX_SPEED = .8;
         final double MIN_SPEED = .1;
-        final double DRIVE_ACCELERATION = MAX_SPEED/5;
+        final double DRIVE_ACCELERATION = 0.05; // Amount to change speed per loop iteration
         final double LAUNCH_MAIN_POWER = .6;
         final double GATE_POWER = 0.5;
         final double ARM_SERVO = 1.0;
+
         //VARS
         boolean yPressed = false;
+        double currentLeftPower = 0.0;  // Add these to track current speed
+        double currentRightPower = 0.0;
 
-        // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
-            // LEFT STICK DRIVE CONTROLS
             double drive = -gamepad1.left_stick_y;
             double turn = gamepad1.right_stick_x;
-            double leftPower = drive + turn;
-            double rightPower = drive - turn;
+            double targetLeftPower = drive + turn;
+            double targetRightPower = drive - turn;
 
-            //NORMALIZE NUMBERS
-            double max = Math.max(1.0, Math.max(Math.abs(leftPower), Math.abs(rightPower)));
-            if (drive > 0) {
+            double max = Math.max(1.0, Math.max(Math.abs(targetLeftPower), Math.abs(targetRightPower)));
+            targetLeftPower /= max;
+            targetRightPower /= max;
 
-            }
-            leftPower += max/DRIVE_ACCELERATION;
-            rightPower += max/DRIVE_ACCELERATION;
-
-
-//            double driveScale = gamepad1.right_bumper ? DRIVE_SCALE_PRECISION : DRIVE_SCALE_FULL;
-            left_wheel.setPower(leftPower);
-            right_wheel.setPower(rightPower);
-/////////////////////////////////////////////
-            //arm_servo configs
-            double armPower = -1.0;
-            boolean aButton = gamepad1.a;
-            if (aButton) {
-                armPower = 1.0;
-            }
-            telemetry.addData("armPower",armPower);
-            telemetry.update();
-            arm_servo.setPosition(armPower);
-
-            //LAUNCHER MOTOR CONTROLS
-            boolean yButton = gamepad1.yWasPressed();
-            // double mainPower = 0.0;
-            if (yButton && yPressed){
-                yPressed = false;
-                launcher_motor.setPower(0.0);
-            } else if (yButton && !yPressed) {
-                yPressed = true;
-                launcher_motor.setPower(LAUNCH_MAIN_POWER);
+            if (currentLeftPower < targetLeftPower) {
+                currentLeftPower = Math.min(currentLeftPower + DRIVE_ACCELERATION, targetLeftPower);
+            } else if (currentLeftPower > targetLeftPower) {
+                currentLeftPower = Math.max(currentLeftPower - DRIVE_ACCELERATION, targetLeftPower);
             }
 
-            //GATE MOTOR CONTROLS
-            boolean xButton = gamepad1.x;
-            double gatePower = 0.0;
-            if (xButton) {
-                gatePower = GATE_POWER;
+            if (currentRightPower < targetRightPower) {
+                currentRightPower = Math.min(currentRightPower + DRIVE_ACCELERATION, targetRightPower);
+            } else if (currentRightPower > targetRightPower) {
+                currentRightPower = Math.max(currentRightPower - DRIVE_ACCELERATION, targetRightPower);
             }
-            else {
-                gatePower = 0.0;
-            }
-            gate_motor.setPower(gatePower);
 
+            left_wheel.setPower(currentLeftPower);
+            right_wheel.setPower(currentRightPower);
 
-            //telemetry
-            telemetry.addData("DRIVE L", "%.2f", leftPower );
-            telemetry.addData("DRIVE R", "%.2f", rightPower);
-            telemetry.addData("ARM_SERVO", "%.2f", armPower);
-            // telemetry.addData("LAUNCHER_MOTOR", "%.2f", armPower);
-            telemetry.update();
+        //arm_servo configs
+        double armPower = -1.0;
+        boolean aButton = gamepad1.a;
+        if (aButton) {
+            armPower = 1.0;
+        }
+        telemetry.addData("armPower",armPower);
+        telemetry.update();
+        arm_servo.setPosition(armPower);
+
+        //LAUNCHER MOTOR CONTROLS
+        if (gamepad1.yWasPressed()) {
+            yPressed = !yPressed;  // Flip the state
+            launcher_motor.setPower(yPressed ? LAUNCH_MAIN_POWER : 0.0);
+        }
+
+        //GATE MOTOR CONTROLS
+        gate_motor.setPower(gamepad1.x ? GATE_POWER : 0.0);
+
+        //telemetry
+        telemetry.addData("DRIVE L", "%.2f", currentLeftPower );
+        telemetry.addData("DRIVE R", "%.2f", currentRightPower);
+        telemetry.addData("ARM_SERVO", "%.2f", armPower);
+        // telemetry.addData("LAUNCHER_MOTOR", "%.2f", armPower);
+        telemetry.update();
         }
 
         //cleanup
