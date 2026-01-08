@@ -87,11 +87,12 @@ public class BlueAuto_Close extends LinearOpMode {
         arm_servo.setPosition(-1);
 
         if (opModeIsActive()) {
-            driveRobot(0.4, "reverse", 1000);
-            sleep(1000);
-            shoot();
-            turnToField(-45);  // Turn left 45 degrees
-            driveRobot(0.4, "forward", 750);
+            driveRobot(.8,"front",2000);
+//            driveRobot(0.4, "reverse", 1000);
+//            sleep(1000);
+//            shoot();
+//            turnToField(-45);  // Turn left 45 degrees
+//            driveRobot(0.4, "forward", 750);
         }
     }
 
@@ -149,17 +150,13 @@ public class BlueAuto_Close extends LinearOpMode {
     }
 
     void driveRobot(double power, String direction, int time) {
-        // Capture the current heading as our target
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
         double startHeading = orientation.getYaw(AngleUnit.DEGREES);
 
-        ElapsedTime timer = new ElapsedTime();
-        timer.reset();
 
-        // Convert direction to power multiplier
         double directionMultiplier = direction.equalsIgnoreCase("reverse") ? -1.0 : 1.0;
 
-        while (opModeIsActive() && timer.milliseconds() < time) {
+        while (opModeIsActive()) {
             //////
             orientation = imu.getRobotYawPitchRollAngles();
             double currentHeading = orientation.getYaw(AngleUnit.DEGREES);

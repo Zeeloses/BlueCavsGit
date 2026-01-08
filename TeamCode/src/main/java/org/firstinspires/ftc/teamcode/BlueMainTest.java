@@ -101,8 +101,9 @@ public class BlueMainTest extends LinearOpMode {
                 currentRightPower = Math.max(currentRightPower - DRIVE_ACCELERATION, targetRightPower);
             }
 
-            left_wheel.setPower(currentLeftPower);
-            right_wheel.setPower(currentRightPower);
+            double driveScale = (gamepad1.right_trigger > 0) ? .5 : 1;
+            left_wheel.setPower(currentLeftPower * driveScale);
+            right_wheel.setPower(currentRightPower * driveScale);
 
         //arm_servo configs
         double armPower = -1.0;
@@ -122,7 +123,6 @@ public class BlueMainTest extends LinearOpMode {
 
         //GATE MOTOR CONTROLS
         gate_motor.setPower(gamepad1.x ? GATE_POWER : 0.0);
-
         //telemetry
         telemetry.addData("DRIVE L", "%.2f", currentLeftPower );
         telemetry.addData("DRIVE R", "%.2f", currentRightPower);
