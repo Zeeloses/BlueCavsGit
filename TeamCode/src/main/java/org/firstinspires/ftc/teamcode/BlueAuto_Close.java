@@ -159,7 +159,8 @@ public class BlueAuto_Close extends LinearOpMode {
         while (opModeIsActive()) {
             //////
             orientation = imu.getRobotYawPitchRollAngles();
-            double currentHeading = orientation.getYaw(AngleUnit.DEGREES);
+            double currentHeading = orientation.
+                    getYaw(AngleUnit.DEGREES);
 
             double headingError = startHeading - currentHeading;
 
