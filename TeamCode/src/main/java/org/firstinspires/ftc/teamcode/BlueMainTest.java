@@ -69,7 +69,7 @@ public class BlueMainTest extends LinearOpMode {
         //TUNING CONSTANTS
         final double MAX_SPEED = .8;
         final double MIN_SPEED = .1;
-        final double DRIVE_ACCELERATION = 0.05; // Amount to change speed per loop iteration
+        final double DRIVE_ACCELERATION = 0.025; // Amount to change speed per loop iteration
         final double LAUNCH_MAIN_POWER = .6;
         final double GATE_POWER = 0.5;
         final double ARM_SERVO = 1.0;
@@ -88,6 +88,8 @@ public class BlueMainTest extends LinearOpMode {
             double max = Math.max(1.0, Math.max(Math.abs(targetLeftPower), Math.abs(targetRightPower)));
             targetLeftPower /= max;
             targetRightPower /= max;
+//            targetLeftPower = turn != 0 ? MAX_SPEED: targetLeftPower / max;
+//            targetRightPower = turn != 0 ? MAX_SPEED: targetLeftPower / max;
 
             if (currentLeftPower < targetLeftPower) {
                 currentLeftPower = Math.min(currentLeftPower + DRIVE_ACCELERATION, targetLeftPower);
@@ -105,30 +107,30 @@ public class BlueMainTest extends LinearOpMode {
             left_wheel.setPower(currentLeftPower * driveScale);
             right_wheel.setPower(currentRightPower * driveScale);
 
-        //arm_servo configs
-        double armPower = -1.0;
-        boolean aButton = gamepad1.a;
-        if (aButton) {
-            armPower = 1.0;
-        }
-        telemetry.addData("armPower",armPower);
-        telemetry.update();
-        arm_servo.setPosition(armPower);
+            //arm_servo configs
+            double armPower = -1.0;
+            boolean aButton = gamepad1.a;
+            if (aButton) {
+                armPower = 1.0;
+            }
+            telemetry.addData("armPower",armPower);
+            telemetry.update();
+            arm_servo.setPosition(armPower);
 
-        //LAUNCHER MOTOR CONTROLS
-        if (gamepad1.yWasPressed()) {
-            yPressed = !yPressed;  // Flip the state
-            launcher_motor.setPower(yPressed ? LAUNCH_MAIN_POWER : 0.0);
-        }
+            //LAUNCHER MOTOR CONTROLS
+            if (gamepad1.yWasPressed()) {
+                yPressed = !yPressed;  // Flip the state
+                launcher_motor.setPower(yPressed ? LAUNCH_MAIN_POWER : 0.0);
+            }
 
-        //GATE MOTOR CONTROLS
-        gate_motor.setPower(gamepad1.x ? GATE_POWER : 0.0);
-        //telemetry
-        telemetry.addData("DRIVE L", "%.2f", currentLeftPower );
-        telemetry.addData("DRIVE R", "%.2f", currentRightPower);
-        telemetry.addData("ARM_SERVO", "%.2f", armPower);
-        // telemetry.addData("LAUNCHER_MOTOR", "%.2f", armPower);
-        telemetry.update();
+            //GATE MOTOR CONTROLS
+            gate_motor.setPower(gamepad1.x ? GATE_POWER : 0.0);
+            //telemetry
+            telemetry.addData("DRIVE L", "%.2f", currentLeftPower );
+            telemetry.addData("DRIVE R", "%.2f", currentRightPower);
+            telemetry.addData("ARM_SERVO", "%.2f", armPower);
+            // telemetry.addData("LAUNCHER_MOTOR", "%.2f", armPower);
+            telemetry.update();
         }
 
         //cleanup

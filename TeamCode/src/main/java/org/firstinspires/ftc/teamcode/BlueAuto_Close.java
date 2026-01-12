@@ -86,13 +86,14 @@ public class BlueAuto_Close extends LinearOpMode {
         imu.resetYaw();
         arm_servo.setPosition(-1);
 
+
+
         if (opModeIsActive()) {
-            driveRobot(.8,"front",2000);
-//            driveRobot(0.4, "reverse", 1000);
-//            sleep(1000);
-//            shoot();
-//            turnToField(-45);  // Turn left 45 degrees
-//            driveRobot(0.4, "forward", 750);
+            driveRobot(0.4, "reverse", 2500);
+            sleep(1000);
+            shoot();
+            turnRobot("left",45);  // Turn left 45 degrees
+            driveRobot(0.5, "forward", 1000);
         }
     }
 
@@ -149,44 +150,47 @@ public class BlueAuto_Close extends LinearOpMode {
         turnToField(targetHeading);
     }
 
-    void driveRobot(double power, String direction, int time) {
-        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-        double startHeading = orientation.getYaw(AngleUnit.DEGREES);
-
-
-        double directionMultiplier = direction.equalsIgnoreCase("reverse") ? -1.0 : 1.0;
-
-        while (opModeIsActive()) {
-            //////
-            orientation = imu.getRobotYawPitchRollAngles();
-            double currentHeading = orientation.
-                    getYaw(AngleUnit.DEGREES);
-
-            double headingError = startHeading - currentHeading;
-
-            while (headingError > 180) headingError -= 360;
-            while (headingError < -180) headingError += 360;
-
-            double correction = DRIVE_KP * headingError;
-            //////
-
-            double leftPower = (power + correction) * directionMultiplier;
-            double rightPower = (power - correction) * directionMultiplier;
-
-            left_wheel.setPower(leftPower);
-            right_wheel.setPower(rightPower);
-
-            telemetry.addData("Error", "%.2f", headingError);
-            telemetry.addData("Correction", "%.3f", correction);
-            telemetry.addData("Left Power", "%.2f", leftPower);
-            telemetry.addData("Right Power", "%.2f", rightPower);
-            telemetry.update();
-        }
-
-        // Stop motors
-        left_wheel.setPower(0);
-        right_wheel.setPower(0);
-    }
+//    void driveRobot(double power, String direction, int time) {
+//        // Capture the current heading as our target
+//        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+//        double startHeading = orientation.getYaw(AngleUnit.DEGREES);
+//
+//        ElapsedTime timer = new ElapsedTime();
+//        timer.reset();
+//
+//        // Convert direction to power multiplier
+//        double directionMultiplier = direction.equalsIgnoreCase("reverse") ? -1.0 : 1.0;
+//
+//        while (opModeIsActive() && timer.milliseconds() < time) {
+//            //////
+//            orientation = imu.getRobotYawPitchRollAngles();
+//            double currentHeading = orientation.getYaw(AngleUnit.DEGREES);
+//
+//            double headingError = startHeading - currentHeading;
+//
+//            while (headingError > 180) headingError -= 360;
+//            while (headingError < -180) headingError += 360;
+//
+//            double correction = DRIVE_KP * headingError;
+//            //////
+//
+//            double leftPower = (power + correction) * directionMultiplier;
+//            double rightPower = (power - correction) * directionMultiplier;
+//
+//            left_wheel.setPower(leftPower);
+//            right_wheel.setPower(rightPower);
+//
+//            telemetry.addData("Error", "%.2f", headingError);
+//            telemetry.addData("Correction", "%.3f", correction);
+//            telemetry.addData("Left Power", "%.2f", leftPower);
+//            telemetry.addData("Right Power", "%.2f", rightPower);
+//            telemetry.update();
+//        }
+//
+//        // Stop motors
+//        left_wheel.setPower(0);
+//        right_wheel.setPower(0);
+//    }
 
     void shoot() {
         final double LAUNCH_MAIN_POWER = .6;
@@ -215,18 +219,45 @@ public class BlueAuto_Close extends LinearOpMode {
         sleep(500);
     }
 
-//    void driveRobot(int power, String direction, int time) {
-//        telemetry.addData("sent", "sent");
-//        telemetry.update();
-//        if (direction.equalsIgnoreCase("reverse")) {
-//            left_wheel.setPower(-power);
-//            right_wheel.setPower(-power);
-//        } else {
-//            left_wheel.setPower(power);
-//            right_wheel.setPower(power);
-//        }
-//        sleep(time);
-//        left_wheel.setPower(0);
-//        right_wheel.setPower(0);
-//    }
+    int calculateTurnTime(int degrees)
+    {
+        int baseTime = (degrees*300)/90;
+        if (degrees > 180) {
+            baseTime = (int)(baseTime*.94);
+        }
+        else if (degrees > 90) {
+            baseTime = (int)(baseTime*.96);
+        }
+        return baseTime;
+    }
+    void turnRobot(String direction, int degrees) {
+        int power = 50;
+        int turnTime = calculateTurnTime(degrees);
+        if (direction.equalsIgnoreCase("left")) {
+            left_wheel.setPower(-power);
+            right_wheel.setPower(power);
+        }
+        else {
+            left_wheel.setPower(power);
+            right_wheel.setPower(-power);
+        }
+        sleep(turnTime);
+        left_wheel.setPower(0);
+        right_wheel.setPower(0);
+    }
+
+    void driveRobot(double power, String direction, int time) {
+        telemetry.addData("sent", "sent");
+        telemetry.update();
+        if (direction.equalsIgnoreCase("reverse")) {
+            left_wheel.setPower(-power);
+            right_wheel.setPower(-power);
+        } else {
+            left_wheel.setPower(power);
+            right_wheel.setPower(power);
+        }
+        sleep(time);
+        left_wheel.setPower(0);
+        right_wheel.setPower(0);
+    }
 }

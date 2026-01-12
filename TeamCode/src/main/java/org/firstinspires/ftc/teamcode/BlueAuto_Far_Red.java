@@ -22,6 +22,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 
 /**
  * This file contains a minimal example of a Linear "OpMode". An OpMode is a 'program' that runs
@@ -36,32 +37,38 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 @Autonomous
 
 public class BlueAuto_Far_Red extends LinearOpMode {
-    private DcMotor left_wheel, right_wheel;
+    private DcMotor left_wheel, right_wheel, launcher_motor, gate_motor;
+    private Servo arm_servo;
 
 
 
     @Override
     public void runOpMode() {
-        //HARDWARE
         left_wheel = hardwareMap.get(DcMotor.class, "left_wheel");
         right_wheel = hardwareMap.get(DcMotor.class, "right_wheel");
-        //CONFIGS
+        launcher_motor = hardwareMap.get(DcMotor.class, "launcher_motor");
+        gate_motor = hardwareMap.get(DcMotor.class, "gate_motor");
+        arm_servo = hardwareMap.get(Servo.class, "arm_servo");
+
+        //MOTOR DIRECTIONS ARE OPPOSITE TO SIDE
         left_wheel.setDirection(DcMotorSimple.Direction.REVERSE);
         right_wheel.setDirection(DcMotorSimple.Direction.FORWARD);
+        launcher_motor.setDirection(DcMotorSimple.Direction.REVERSE);
+        gate_motor.setDirection(DcMotorSimple.Direction.REVERSE);
 
+        //BREAK BEHAVIOR
         left_wheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         right_wheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        launcher_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        gate_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         left_wheel.setPower(0);
         right_wheel.setPower(0);
         //VARS
         boolean isForward = false;
 
-
         left_wheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         right_wheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
@@ -70,9 +77,9 @@ public class BlueAuto_Far_Red extends LinearOpMode {
 
         // run until the end of the match (driver presses STOP)
         if (opModeIsActive()) {
-            driveRobot(60,"forward",1500);
-            turnRobot("right",45);
-            driveRobot(50,"forward",1000);
+            driveRobot(.7,"forward",2250);
+            turnRobot("right",65);
+            shoot();
         }
     }
     int calculateTurnTime(int degrees) {
@@ -100,8 +107,36 @@ public class BlueAuto_Far_Red extends LinearOpMode {
         left_wheel.setPower(0);
         right_wheel.setPower(0);
     }
-    void driveRobot(int power, String direction, int time) {
-        telemetry.addData("sent", "sent");
+    void shoot() {
+        final double LAUNCH_MAIN_POWER = .6;
+        final double GATE_POWER = 0.5;
+
+        launcher_motor.setPower(LAUNCH_MAIN_POWER);
+        sleep(4000);
+
+
+        //1st
+        gate_motor.setPower(GATE_POWER);
+        sleep(2500);
+        gate_motor.setPower(0);
+        driveRobot(.2,"forward",250);
+        sleep(750);
+        //2nd
+        arm_servo.setPosition(1); // arm
+        sleep(750);
+        gate_motor.setPower(GATE_POWER);
+        sleep(2000);
+        arm_servo.setPosition(-1);
+        sleep(750);
+        //3rd
+        arm_servo.setPosition(1); // arm
+        sleep(750);
+        gate_motor.setPower(GATE_POWER);
+        sleep(2500);
+        arm_servo.setPosition(-1);
+        sleep(500);
+    }
+    void driveRobot(double power, String direction, int time) {
         telemetry.update();
         if (direction.equalsIgnoreCase("reverse")) {
             left_wheel.setPower(-power);
