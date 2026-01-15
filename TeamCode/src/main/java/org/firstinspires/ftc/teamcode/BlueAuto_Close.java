@@ -89,11 +89,11 @@ public class BlueAuto_Close extends LinearOpMode {
 
 
         if (opModeIsActive()) {
-            driveRobot(0.4, "reverse", 2500);
+            driveRobot(0.6, "reverse", 1950);
             sleep(1000);
             shoot();
             turnRobot("left",45);  // Turn left 45 degrees
-            driveRobot(0.5, "forward", 1000);
+            driveRobot(0.5, "forward", 1250);
         }
     }
 
@@ -198,23 +198,26 @@ public class BlueAuto_Close extends LinearOpMode {
 
         launcher_motor.setPower(LAUNCH_MAIN_POWER);
         sleep(4000);
+
+
         //1st
         gate_motor.setPower(GATE_POWER);
-        sleep(1500);
+        sleep(2500);
         gate_motor.setPower(0);
-        sleep(500);
+        driveRobot(.2,"forward",250);
+        sleep(750);
         //2nd
         arm_servo.setPosition(1); // arm
-        sleep(500);
+        sleep(750);
         gate_motor.setPower(GATE_POWER);
-        sleep(1500);
+        sleep(2000);
         arm_servo.setPosition(-1);
-        sleep(500);
+        sleep(750);
         //3rd
         arm_servo.setPosition(1); // arm
-        sleep(500);
+        sleep(750);
         gate_motor.setPower(GATE_POWER);
-        sleep(1500);
+        sleep(2500);
         arm_servo.setPosition(-1);
         sleep(500);
     }

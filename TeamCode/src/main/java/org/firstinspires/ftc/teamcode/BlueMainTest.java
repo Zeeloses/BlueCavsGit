@@ -18,11 +18,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 */
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.LED;
 
 /**
  * +
@@ -41,6 +44,7 @@ public class BlueMainTest extends LinearOpMode {
     //DRIVE MOTOR ESTABLISHEMENT
     private DcMotor left_wheel, right_wheel, launcher_motor, gate_motor;
     private Servo arm_servo;
+    private LED aliskLight;
 
     @Override
     public void runOpMode() {
@@ -50,6 +54,7 @@ public class BlueMainTest extends LinearOpMode {
         launcher_motor = hardwareMap.get(DcMotor.class, "launcher_motor");
         gate_motor = hardwareMap.get(DcMotor.class, "gate_motor");
         arm_servo = hardwareMap.get(Servo.class, "arm_servo");
+        aliskLight = hardwareMap.get(LED.class, "aliskLight");
 
         //MOTOR DIRECTIONS ARE OPPOSITE TO SIDE
         left_wheel.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -70,14 +75,15 @@ public class BlueMainTest extends LinearOpMode {
         final double MAX_SPEED = .8;
         final double MIN_SPEED = .1;
         final double DRIVE_ACCELERATION = 0.025; // Amount to change speed per loop iteration
-        final double LAUNCH_MAIN_POWER = .6;
+        final double LAUNCH_MAIN_POWER = 0.5;
         final double GATE_POWER = 0.5;
         final double ARM_SERVO = 1.0;
 
         //VARS
-        boolean yPressed = false;
+        int launchNum = 0;
         double currentLeftPower = 0.0;  // Add these to track current speed
         double currentRightPower = 0.0;
+
 
         while (opModeIsActive()) {
             double drive = -gamepad1.left_stick_y;
@@ -108,20 +114,35 @@ public class BlueMainTest extends LinearOpMode {
             right_wheel.setPower(currentRightPower * driveScale);
 
             //arm_servo configs
-            double armPower = -1.0;
+            double armPower = -0.5;
             boolean aButton = gamepad1.a;
             if (aButton) {
                 armPower = 1.0;
             }
             telemetry.addData("armPower",armPower);
-            telemetry.update();
             arm_servo.setPosition(armPower);
 
             //LAUNCHER MOTOR CONTROLS
             if (gamepad1.yWasPressed()) {
-                yPressed = !yPressed;  // Flip the state
-                launcher_motor.setPower(yPressed ? LAUNCH_MAIN_POWER : 0.0);
+                launchNum += 1;
             }
+            switch(launchNum) {
+                case 1:
+                    launcher_motor.setPower(.5);
+                    aliskLight.on();
+                    break;
+                case 2:
+                    launcher_motor.setPower(.75);
+                    aliskLight.on();
+                    break;
+                default:
+                    launcher_motor.setPower(0.0);
+                    launchNum = 0;
+                    break;
+            }
+
+
+
 
             //GATE MOTOR CONTROLS
             gate_motor.setPower(gamepad1.x ? GATE_POWER : 0.0);
