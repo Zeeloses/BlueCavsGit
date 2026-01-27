@@ -169,7 +169,7 @@ public class RobotAutoDriveByEncoder_Linear extends LinearOpMode {
                 // Display it for the driver.
                 telemetry.addData("Running to",  " %7d :%7d", newLeftTarget,  newRightTarget);
                 telemetry.addData("Currently at",  " at %7d :%7d",
-                                            leftDrive.getCurrentPosition(), rightDrive.getCurrentPosition());
+                        leftDrive.getCurrentPosition(), rightDrive.getCurrentPosition());
                 telemetry.update();
             }
 
