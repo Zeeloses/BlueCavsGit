@@ -21,9 +21,17 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.LED;
 
+
+enum Mode {
+    SHORT,
+    FAR,
+    OFF
+}
 /**
  * +
  * This file contains a minimal example of a Linear "OpMode". An OpMode is a 'program' that runs
@@ -38,18 +46,22 @@ import com.qualcomm.robotcore.hardware.Servo;
 @TeleOp
 
 public class BlueMain extends LinearOpMode {
-    //DRIVE MOTOR ESTABLISHEMENT
-    private DcMotor left_wheel, right_wheel, launcher_motor, gate_motor;
+    //DRIVE MOTOR
+    private DcMotor left_wheel, right_wheel, gate_motor;
+    private DcMotorEx launcher_motor;
     private Servo arm_servo;
+    private LED aliskLight_Red, aliskLight_Green;
 
     @Override
     public void runOpMode() {
         //HARDWARE LEGEND
         left_wheel = hardwareMap.get(DcMotor.class, "left_wheel");
         right_wheel = hardwareMap.get(DcMotor.class, "right_wheel");
-        launcher_motor = hardwareMap.get(DcMotor.class, "launcher_motor");
+        launcher_motor = hardwareMap.get(DcMotorEx.class, "launcher_motor");
         gate_motor = hardwareMap.get(DcMotor.class, "gate_motor");
         arm_servo = hardwareMap.get(Servo.class, "arm_servo");
+        aliskLight_Red = hardwareMap.get(LED.class, "aliskLight_Red");
+        aliskLight_Green = hardwareMap.get(LED.class, "aliskLight_Green");
 
         //MOTOR DIRECTIONS ARE OPPOSITE TO SIDE
         left_wheel.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -62,76 +74,121 @@ public class BlueMain extends LinearOpMode {
         launcher_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         gate_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        //TURN ON ENCODER MODE FOR LAUNCH MOTOR
+        launcher_motor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+
         telemetry.addData("Status", "Online");
         telemetry.update();
         waitForStart();
 
         //TUNING CONSTANTS
-        final double DRIVE_SCALE_FULL = 1.0;
-        final double DRIVE_SCALE_PRECISION = 0.4;
-        final double LAUNCH_MAIN_POWER = .6;
-
-        final double GATE_POWER = 0.5;
+        final double MAX_SPEED = .8;
+        final double MIN_SPEED = .1;
+        final double DRIVE_ACCELERATION = 0.05; // Amount to change speed per loop iteration
+        final double LAUNCH_MAIN_POWER = 0.5;
+        final double GATE_POWER = 0.75;
         final double ARM_SERVO = 1.0;
-        //VARS
-        boolean yPressed = false;
+        final double SHORT_RPM = 265;
+        final double FAR_RPM = 320;
 
-        // run until the end of the match (driver presses STOP)
+        //VARS
+        Mode LAUNCH_MODE = Mode.OFF;
+        double currentLeftPower = 0.0;  // Add these to track current speed
+        double currentRightPower = 0.0;
+
+
+
         while (opModeIsActive()) {
-            // LEFT STICK DRIVE CONTROLS
+            //RPM BASE CALCULATION - RUNS IN LOOP AND IS CONSTANTLY UPDATED
+            double ticksPerSec = launcher_motor.getVelocity();
+            double ticksPerRev = gate_motor.getMotorType().getTicksPerRev();
+            double RPM = (ticksPerSec / ticksPerRev) * 60.0;
+            // MAIN PROCESS VARS
             double drive = -gamepad1.left_stick_y;
             double turn = gamepad1.right_stick_x;
-            double leftPower = drive + turn;
-            double rightPower = drive - turn;
+            double targetLeftPower = drive + turn;
+            double targetRightPower = drive - turn;
 
-            //NORMALIZE NUMBERS
-            double max = Math.max(1.0, Math.max(Math.abs(leftPower), Math.abs(rightPower)));
-            leftPower /= max;
-            rightPower /= max;
+       double max = Math.max(1.0, Math.max(Math.abs(targetLeftPower), Math.abs(targetRightPower)));
+            targetLeftPower /= max;
+            targetRightPower /= max;
+//            targetLeftPower = turn != 0 ? MAX_SPEED: targetLeftPower / max;
+//            targetRightPower = turn != 0 ? MAX_SPEED: targetLeftPower / max;
 
+            if (currentLeftPower < targetLeftPower) {
+                currentLeftPower = Math.min(currentLeftPower + DRIVE_ACCELERATION, targetLeftPower);
+            } else if (currentLeftPower > targetLeftPower) {
+                currentLeftPower = Math.max(currentLeftPower - DRIVE_ACCELERATION, targetLeftPower);
+            }
 
-            double driveScale = gamepad1.right_bumper ? DRIVE_SCALE_PRECISION : DRIVE_SCALE_FULL;
-            left_wheel.setPower(leftPower * driveScale);
-            right_wheel.setPower(rightPower * driveScale);
+            if (currentRightPower < targetRightPower) {
+                currentRightPower = Math.min(currentRightPower + DRIVE_ACCELERATION, targetRightPower);
+            } else if (currentRightPower > targetRightPower) {
+                currentRightPower = Math.max(currentRightPower - DRIVE_ACCELERATION, targetRightPower);
+            }
+
+            double driveScale = (gamepad1.right_trigger > 0) ? .5 : 1;
+            left_wheel.setPower(currentLeftPower * driveScale);
+            right_wheel.setPower(currentRightPower * driveScale);
 
             //arm_servo configs
-            double armPower = -1.0;
+            double armPower = -0.5;
             boolean aButton = gamepad1.a;
             if (aButton) {
                 armPower = 1.0;
             }
-            telemetry.addData("armPower",armPower);
-            telemetry.update();
             arm_servo.setPosition(armPower);
 
             //LAUNCHER MOTOR CONTROLS
-            boolean yButton = gamepad1.yWasPressed();
-            // double mainPower = 0.0;
-            if (yButton && yPressed){
-                yPressed = false;
+            if (gamepad1.yWasPressed()) {
+                Mode localMode = LAUNCH_MODE; //temp set to avoid double access of var
+
+                if (localMode == Mode.OFF || localMode == Mode.FAR) {
+                    LAUNCH_MODE = Mode.SHORT;
+                }
+
+                if (localMode == Mode.SHORT){
+                    LAUNCH_MODE = Mode.FAR;
+                }
+            }
+
+            if(gamepad1.bWasPressed()){
+                LAUNCH_MODE = Mode.OFF;
+            }
+
+            if (LAUNCH_MODE == Mode.SHORT) {
+                aliskLight_Green.off();
+                launcher_motor.setPower(.55);
+                if (RPM >= SHORT_RPM && RPM <= (SHORT_RPM + 20) && checkRPM(SHORT_RPM)) {
+                    aliskLight_Red.on();
+                } else {
+                    aliskLight_Red.off();
+                }
+            }
+
+            if (LAUNCH_MODE == Mode.FAR) {
+                aliskLight_Red.off();
+                launcher_motor.setPower(.65);
+                if (RPM >= FAR_RPM && checkRPM(FAR_RPM)) {
+                    aliskLight_Green.on();
+                } else {
+                    aliskLight_Green.off();
+                }
+            }
+
+            if (LAUNCH_MODE == Mode.OFF){
+                aliskLight_Green.off();
+                aliskLight_Red.off();
                 launcher_motor.setPower(0.0);
-            } else if (yButton && !yPressed) {
-                yPressed = true;
-                launcher_motor.setPower(LAUNCH_MAIN_POWER);
             }
 
             //GATE MOTOR CONTROLS
-            boolean xButton = gamepad1.x;
-            double gatePower = 0.0;
-            if (xButton) {
-                gatePower = GATE_POWER;
-            }
-            else {
-                gatePower = 0.0;
-            }
-            gate_motor.setPower(gatePower);
-
-
+            gate_motor.setPower(gamepad1.x ? GATE_POWER : 0.0);
             //telemetry
-            telemetry.addData("DRIVE L", "%.2f", leftPower * driveScale);
-            telemetry.addData("DRIVE R", "%.2f", rightPower * driveScale);
+            telemetry.addData("DRIVE L", "%.2f", currentLeftPower);
+            telemetry.addData("DRIVE R", "%.2f", currentRightPower);
             telemetry.addData("ARM_SERVO", "%.2f", armPower);
-            // telemetry.addData("LAUNCHER_MOTOR", "%.2f", armPower);
+            telemetry.addData("RPM","%.2f", RPM);
             telemetry.update();
         }
 
@@ -140,5 +197,10 @@ public class BlueMain extends LinearOpMode {
         right_wheel.setPower(0.0);
         arm_servo.setPosition(0.0);
         launcher_motor.setPower(0.0);
+    }
+
+    public boolean checkRPM(double RPM){
+//        return RPM < (RPM += 10) || RPM > (RPM -= 10);
+        return (RPM < (RPM += 10) && RPM > (RPM -= 10));
     }
 }

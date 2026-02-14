@@ -92,134 +92,40 @@ public class BlueAuto_Close extends LinearOpMode {
             driveRobot(0.6, "reverse", 1950);
             sleep(1000);
             shoot();
-            turnRobot("left",45);  // Turn left 45 degrees
+            turnRobot("left",63);  // Turn left 63 degrees
             driveRobot(0.5, "forward", 1250);
         }
     }
 
-    void turnToField(double degree) {
-        ElapsedTime timer = new ElapsedTime();
-        timer.reset();
-
-        while (opModeIsActive() && timer.seconds() < 3.0) {  // 3 second timeout
-            ///////
-            YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-            double currentHeading = orientation.getYaw(AngleUnit.DEGREES);
-
-            double error = degree - currentHeading;
-
-            while (error > 180) error -= 360;
-            while (error < -180) error += 360;
-
-            if (Math.abs(error) < TURN_TOLERANCE) {
-                break;
-            }
-
-            double turnPower = TURN_KP * error;
-
-//            if (Math.abs(turnPower) < MIN_TURN_POWER && Math.abs(error) > TURN_TOLERANCE) {
-//                turnPower = Math.signum(turnPower) * MIN_TURN_POWER;
-//            }
-            ///////
-            turnPower = Math.max(-MAX_TURN_POWER, Math.min(MAX_TURN_POWER, turnPower));
-
-            left_wheel.setPower(-turnPower);
-            right_wheel.setPower(turnPower);
-
-            telemetry.addData("Target", "%.2f degrees", degree);
-            telemetry.addData("Current", "%.2f degrees", currentHeading);
-            telemetry.addData("Error", "%.2f degrees", error);
-            telemetry.addData("Power", "%.2f", turnPower);
-            telemetry.update();
-        }
-
-        // Stop motors
-        left_wheel.setPower(0);
-        right_wheel.setPower(0);
-    }
-
-    void turnToRobot(double degrees) {
-        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-        double currentHeading = orientation.getYaw(AngleUnit.DEGREES);
-        double targetHeading = currentHeading + degrees;
-
-        // Normalize to -180 to 180
-        while (targetHeading > 180) targetHeading -= 360;
-        while (targetHeading < -180) targetHeading += 360;
-
-        turnToField(targetHeading);
-    }
-
-//    void driveRobot(double power, String direction, int time) {
-//        // Capture the current heading as our target
-//        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-//        double startHeading = orientation.getYaw(AngleUnit.DEGREES);
-//
-//        ElapsedTime timer = new ElapsedTime();
-//        timer.reset();
-//
-//        // Convert direction to power multiplier
-//        double directionMultiplier = direction.equalsIgnoreCase("reverse") ? -1.0 : 1.0;
-//
-//        while (opModeIsActive() && timer.milliseconds() < time) {
-//            //////
-//            orientation = imu.getRobotYawPitchRollAngles();
-//            double currentHeading = orientation.getYaw(AngleUnit.DEGREES);
-//
-//            double headingError = startHeading - currentHeading;
-//
-//            while (headingError > 180) headingError -= 360;
-//            while (headingError < -180) headingError += 360;
-//
-//            double correction = DRIVE_KP * headingError;
-//            //////
-//
-//            double leftPower = (power + correction) * directionMultiplier;
-//            double rightPower = (power - correction) * directionMultiplier;
-//
-//            left_wheel.setPower(leftPower);
-//            right_wheel.setPower(rightPower);
-//
-//            telemetry.addData("Error", "%.2f", headingError);
-//            telemetry.addData("Correction", "%.3f", correction);
-//            telemetry.addData("Left Power", "%.2f", leftPower);
-//            telemetry.addData("Right Power", "%.2f", rightPower);
-//            telemetry.update();
-//        }
-//
-//        // Stop motors
-//        left_wheel.setPower(0);
-//        right_wheel.setPower(0);
-//    }
-
     void shoot() {
         final double LAUNCH_MAIN_POWER = .6;
-        final double GATE_POWER = 0.5;
+        final double GATE_POWER = .75;
 
         launcher_motor.setPower(LAUNCH_MAIN_POWER);
         sleep(4000);
 
-
+        arm_servo.setPosition(-.5);
         //1st
         gate_motor.setPower(GATE_POWER);
         sleep(2500);
-        gate_motor.setPower(0);
-        driveRobot(.2,"forward",250);
         sleep(750);
         //2nd
-        arm_servo.setPosition(1); // arm
+        arm_servo.setPosition(.75); // arm
+        sleep(2750);
+        arm_servo.setPosition(-.5);
         sleep(750);
-        gate_motor.setPower(GATE_POWER);
-        sleep(2000);
-        arm_servo.setPosition(-1);
-        sleep(750);
+        gate_motor.setPower(0);
         //3rd
-        arm_servo.setPosition(1); // arm
-        sleep(750);
+        arm_servo.setPosition(.75); // arm
+        sleep(2750);
         gate_motor.setPower(GATE_POWER);
-        sleep(2500);
-        arm_servo.setPosition(-1);
+        arm_servo.setPosition(-.5);
         sleep(500);
+        arm_servo.setPosition(.75);
+        sleep(2750);
+        arm_servo.setPosition(-.5);
+        sleep(1000);
+        gate_motor.setPower(0);
     }
 
     int calculateTurnTime(int degrees)

@@ -77,8 +77,8 @@ public class BlueAuto_Far_Red extends LinearOpMode {
 
         // run until the end of the match (driver presses STOP)
         if (opModeIsActive()) {
-            driveRobot(.7,"forward",2250);
-            turnRobot("right",65);
+            driveRobot(.7,"forward",2000);
+            turnRobot("right",63);  // Turn right 63 degrees
             shoot();
         }
     }
@@ -90,10 +90,10 @@ public class BlueAuto_Far_Red extends LinearOpMode {
         else if (degrees > 90) {
             baseTime = (int)(baseTime*.96);
         }
-        return baseTime;
+        return baseTime*2;
     }
     void turnRobot(String direction, int degrees) {
-        int power = 50;
+        double power = .5;
         int turnTime = calculateTurnTime(degrees);
         if (direction.equalsIgnoreCase("left")) {
             left_wheel.setPower(-power);
@@ -109,32 +109,33 @@ public class BlueAuto_Far_Red extends LinearOpMode {
     }
     void shoot() {
         final double LAUNCH_MAIN_POWER = .6;
-        final double GATE_POWER = 0.5;
+        final double GATE_POWER = .75;
 
         launcher_motor.setPower(LAUNCH_MAIN_POWER);
         sleep(4000);
 
-
+        arm_servo.setPosition(-.5);
         //1st
         gate_motor.setPower(GATE_POWER);
         sleep(2500);
-        gate_motor.setPower(0);
-        driveRobot(.2,"forward",250);
         sleep(750);
         //2nd
-        arm_servo.setPosition(1); // arm
+        arm_servo.setPosition(.75); // arm
+        sleep(2750);
+        arm_servo.setPosition(-.5);
         sleep(750);
-        gate_motor.setPower(GATE_POWER);
-        sleep(2000);
-        arm_servo.setPosition(-1);
-        sleep(750);
+        gate_motor.setPower(0);
         //3rd
-        arm_servo.setPosition(1); // arm
-        sleep(750);
+        arm_servo.setPosition(.75); // arm
+        sleep(2750);
         gate_motor.setPower(GATE_POWER);
-        sleep(2500);
-        arm_servo.setPosition(-1);
+        arm_servo.setPosition(-.5);
         sleep(500);
+        arm_servo.setPosition(.75);
+        sleep(2750);
+        arm_servo.setPosition(-.5);
+        sleep(1000);
+        gate_motor.setPower(0);
     }
     void driveRobot(double power, String direction, int time) {
         telemetry.update();
