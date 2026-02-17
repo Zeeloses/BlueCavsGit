@@ -98,6 +98,7 @@ public class BlueMain extends LinearOpMode {
 
 
 
+
         while (opModeIsActive()) {
             //RPM BASE CALCULATION - RUNS IN LOOP AND IS CONSTANTLY UPDATED
             double ticksPerSec = launcher_motor.getVelocity();
@@ -110,7 +111,7 @@ public class BlueMain extends LinearOpMode {
             double targetRightPower = drive - turn;
 
        double max = Math.max(1.0, Math.max(Math.abs(targetLeftPower), Math.abs(targetRightPower)));
-            targetLeftPower /= max;
+            targetLeftPower /= max - 0.5;
             targetRightPower /= max;
 //            targetLeftPower = turn != 0 ? MAX_SPEED: targetLeftPower / max;
 //            targetRightPower = turn != 0 ? MAX_SPEED: targetLeftPower / max;
@@ -128,7 +129,7 @@ public class BlueMain extends LinearOpMode {
             }
 
             double driveScale = (gamepad1.right_trigger > 0) ? .5 : 1;
-            left_wheel.setPower(currentLeftPower * driveScale);
+            left_wheel.setPower(currentLeftPower * driveScale );
             right_wheel.setPower(currentRightPower * driveScale);
 
             //arm_servo configs

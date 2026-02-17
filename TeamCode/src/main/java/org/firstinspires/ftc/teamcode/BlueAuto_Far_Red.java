@@ -72,13 +72,13 @@ public class BlueAuto_Far_Red extends LinearOpMode {
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
-        // Wait for the game to start (driver presses PLAY)
         waitForStart();
 
-        // run until the end of the match (driver presses STOP)
         if (opModeIsActive()) {
-            driveRobot(.7,"forward",2000);
-            turnRobot("right",63);  // Turn right 63 degrees
+            driveRobot(.8,"forward",1750);
+            turnRobot("right", 68);
+            driveRobot(.8, "forward",500);
+            turnRobot("right",68);
             shoot();
         }
     }
@@ -108,7 +108,7 @@ public class BlueAuto_Far_Red extends LinearOpMode {
         right_wheel.setPower(0);
     }
     void shoot() {
-        final double LAUNCH_MAIN_POWER = .6;
+        final double LAUNCH_MAIN_POWER = 0.78;
         final double GATE_POWER = .75;
 
         launcher_motor.setPower(LAUNCH_MAIN_POWER);
@@ -120,18 +120,18 @@ public class BlueAuto_Far_Red extends LinearOpMode {
         sleep(2500);
         sleep(750);
         //2nd
-        arm_servo.setPosition(.75); // arm
+        arm_servo.setPosition(1); // arm
         sleep(2750);
         arm_servo.setPosition(-.5);
         sleep(750);
         gate_motor.setPower(0);
         //3rd
-        arm_servo.setPosition(.75); // arm
+        arm_servo.setPosition(1); // arm
         sleep(2750);
         gate_motor.setPower(GATE_POWER);
         arm_servo.setPosition(-.5);
         sleep(500);
-        arm_servo.setPosition(.75);
+        arm_servo.setPosition(1);
         sleep(2750);
         arm_servo.setPosition(-.5);
         sleep(1000);

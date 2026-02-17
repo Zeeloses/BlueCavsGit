@@ -70,7 +70,7 @@ public class BlueAuto_Far_Straight extends LinearOpMode {
 
         // run until the end of the match (driver presses STOP)
         if (opModeIsActive()) {
-            driveRobot(30,"forward",1000);
+            driveRobot(.7,"forward",750);
         }
     }
     int calculateTurnTime(int degrees) {
@@ -98,7 +98,7 @@ public class BlueAuto_Far_Straight extends LinearOpMode {
         left_wheel.setPower(0);
         right_wheel.setPower(0);
     }
-    void driveRobot(int power, String direction, int time) {
+    void driveRobot(double power, String direction, int time) {
         telemetry.addData("sent", "sent");
         telemetry.update();
         if (direction.equalsIgnoreCase("reverse")) {

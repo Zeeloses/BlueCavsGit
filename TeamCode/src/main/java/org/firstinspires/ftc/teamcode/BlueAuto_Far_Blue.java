@@ -74,13 +74,14 @@ public class BlueAuto_Far_Blue extends LinearOpMode {
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
-        // Wait for the game to start (driver presses PLAY)
         waitForStart();
 
-        // run until the end of the match (driver presses STOP)
         if (opModeIsActive()) {
-            driveRobot(.7,"forward",2000);
-            turnRobot("left",60);
+            driveRobot(.8,"forward",1650);
+            turnRobot("right", 45);
+            driveRobot(.8, "forward",500);
+            turnRobot("left",75);
+            sleep(1000);
             shoot();
         }
     }
@@ -96,30 +97,35 @@ public class BlueAuto_Far_Blue extends LinearOpMode {
     }
 
     void shoot() {
-        final double LAUNCH_MAIN_POWER = .6;
-        final double GATE_POWER = 0.5;
+        final double LAUNCH_MAIN_POWER = .78;
+        final double GATE_POWER = .75;
 
         launcher_motor.setPower(LAUNCH_MAIN_POWER);
         sleep(4000);
+
+        arm_servo.setPosition(-.5);
         //1st
         gate_motor.setPower(GATE_POWER);
-        sleep(1500);
-        gate_motor.setPower(0);
-        sleep(500);
+        sleep(2500);
+        sleep(750);
         //2nd
         arm_servo.setPosition(1); // arm
-        sleep(500);
-        gate_motor.setPower(GATE_POWER);
-        sleep(1500);
-        arm_servo.setPosition(-1);
-        sleep(500);
+        sleep(2750);
+        arm_servo.setPosition(-.5);
+        sleep(750);
+        gate_motor.setPower(0);
         //3rd
         arm_servo.setPosition(1); // arm
-        sleep(500);
+        sleep(2750);
         gate_motor.setPower(GATE_POWER);
-        sleep(1500);
-        arm_servo.setPosition(-1);
+        arm_servo.setPosition(-.5);
         sleep(500);
+        arm_servo.setPosition(1);
+        sleep(2750);
+        arm_servo.setPosition(-.5);
+        sleep(1000);
+        gate_motor.setPower(0);
+        launcher_motor.setPower(0);
     }
     void turnRobot(String direction, int degrees) {
         int power = 50;
