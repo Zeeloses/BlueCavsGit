@@ -47,16 +47,16 @@ enum Mode {
 
 public class BlueMain extends LinearOpMode {
     //DRIVE MOTOR
-    private DcMotor left_wheel, right_wheel, gate_motor;
-    private DcMotorEx launcher_motor;
+    private DcMotor gate_motor;
+    private DcMotorEx launcher_motor, left_wheel, right_wheel;
     private Servo arm_servo;
     private LED aliskLight_Red, aliskLight_Green;
 
     @Override
     public void runOpMode() {
         //HARDWARE LEGEND
-        left_wheel = hardwareMap.get(DcMotor.class, "left_wheel");
-        right_wheel = hardwareMap.get(DcMotor.class, "right_wheel");
+        left_wheel = hardwareMap.get(DcMotorEx.class, "left_wheel");
+        right_wheel = hardwareMap.get(DcMotorEx.class, "right_wheel");
         launcher_motor = hardwareMap.get(DcMotorEx.class, "launcher_motor");
         gate_motor = hardwareMap.get(DcMotor.class, "gate_motor");
         arm_servo = hardwareMap.get(Servo.class, "arm_servo");
@@ -74,47 +74,53 @@ public class BlueMain extends LinearOpMode {
         launcher_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         gate_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        //TURN ON ENCODER MODE FOR LAUNCH MOTOR
+        //TURN ON ENCODER
         launcher_motor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        left_wheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        right_wheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         telemetry.addData("Status", "Online");
         telemetry.update();
         waitForStart();
 
         //TUNING CONSTANTS
-        final double MAX_SPEED = .8;
-        final double MIN_SPEED = .1;
-        final double DRIVE_ACCELERATION = 0.05; // Amount to change speed per loop iteration
+        final double DRIVE_ACCELERATION = 0.1; // Amount to change speed per loop iteration
         final double LAUNCH_MAIN_POWER = 0.5;
         final double GATE_POWER = 0.75;
         final double ARM_SERVO = 1.0;
-        final double SHORT_RPM = 265;
-        final double FAR_RPM = 320;
+        final double SHORT_RPM = 130;
+        final double FAR_RPM = 163;
 
         //VARS
         Mode LAUNCH_MODE = Mode.OFF;
         double currentLeftPower = 0.0;  // Add these to track current speed
         double currentRightPower = 0.0;
 
-
-
-
         while (opModeIsActive()) {
             //RPM BASE CALCULATION - RUNS IN LOOP AND IS CONSTANTLY UPDATED
             double ticksPerSec = launcher_motor.getVelocity();
-            double ticksPerRev = gate_motor.getMotorType().getTicksPerRev();
-            double RPM = (ticksPerSec / ticksPerRev) * 60.0;
+            double ticksPerRev = launcher_motor.getMotorType().getTicksPerRev();
+            double RPM = calcRPM(ticksPerSec,ticksPerRev);
+
+            double R_ticksPerSec = right_wheel.getVelocity();
+            double R_ticksPerRev = right_wheel.getMotorType().getTicksPerRev();
+            double R_RPM = calcRPM(R_ticksPerSec,R_ticksPerRev);
+
+            double L_ticksPerSec = left_wheel.getVelocity();
+            double L_ticksPerRev = left_wheel.getMotorType().getTicksPerRev();
+            double L_RPM = calcRPM(L_ticksPerSec,L_ticksPerRev);
+
             // MAIN PROCESS VARS
             double drive = -gamepad1.left_stick_y;
             double turn = gamepad1.right_stick_x;
             double targetLeftPower = drive + turn;
             double targetRightPower = drive - turn;
 
-       double max = Math.max(1.0, Math.max(Math.abs(targetLeftPower), Math.abs(targetRightPower)));
-            targetLeftPower /= max - 0.5;
+            double max = Math.max(
+                    1.0, Math.max(Math.abs(targetLeftPower),Math.abs(targetRightPower))
+            );
+            targetLeftPower /= max;
             targetRightPower /= max;
-//            targetLeftPower = turn != 0 ? MAX_SPEED: targetLeftPower / max;
-//            targetRightPower = turn != 0 ? MAX_SPEED: targetLeftPower / max;
 
             if (currentLeftPower < targetLeftPower) {
                 currentLeftPower = Math.min(currentLeftPower + DRIVE_ACCELERATION, targetLeftPower);
@@ -129,7 +135,7 @@ public class BlueMain extends LinearOpMode {
             }
 
             double driveScale = (gamepad1.right_trigger > 0) ? .5 : 1;
-            left_wheel.setPower(currentLeftPower * driveScale );
+            left_wheel.setPower(currentLeftPower * driveScale);
             right_wheel.setPower(currentRightPower * driveScale);
 
             //arm_servo configs
@@ -160,7 +166,7 @@ public class BlueMain extends LinearOpMode {
             if (LAUNCH_MODE == Mode.SHORT) {
                 aliskLight_Green.off();
                 launcher_motor.setPower(.55);
-                if (RPM >= SHORT_RPM && RPM <= (SHORT_RPM + 20) && checkRPM(SHORT_RPM)) {
+                if (RPM >= SHORT_RPM && RPM <= (SHORT_RPM + 20)) {
                     aliskLight_Red.on();
                 } else {
                     aliskLight_Red.off();
@@ -170,7 +176,7 @@ public class BlueMain extends LinearOpMode {
             if (LAUNCH_MODE == Mode.FAR) {
                 aliskLight_Red.off();
                 launcher_motor.setPower(.65);
-                if (RPM >= FAR_RPM && checkRPM(FAR_RPM)) {
+                if (RPM >= FAR_RPM && RPM <= (FAR_RPM + 20)) {
                     aliskLight_Green.on();
                 } else {
                     aliskLight_Green.off();
@@ -190,6 +196,8 @@ public class BlueMain extends LinearOpMode {
             telemetry.addData("DRIVE R", "%.2f", currentRightPower);
             telemetry.addData("ARM_SERVO", "%.2f", armPower);
             telemetry.addData("RPM","%.2f", RPM);
+            telemetry.addData("R_RPM","%.2f", R_RPM);
+            telemetry.addData("L_RPM","%.2f", L_RPM);
             telemetry.update();
         }
 
@@ -200,8 +208,7 @@ public class BlueMain extends LinearOpMode {
         launcher_motor.setPower(0.0);
     }
 
-    public boolean checkRPM(double RPM){
-//        return RPM < (RPM += 10) || RPM > (RPM -= 10);
-        return (RPM < (RPM += 10) && RPM > (RPM -= 10));
+    public double calcRPM(double TPS, double TPV) {
+        return (TPS / TPV) * 60;
     }
 }
