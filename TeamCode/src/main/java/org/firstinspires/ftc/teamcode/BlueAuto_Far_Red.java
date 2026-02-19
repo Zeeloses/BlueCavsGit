@@ -17,139 +17,28 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 package org.firstinspires.ftc.teamcode;
-
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.Servo;
 
-/**
- * This file contains a minimal example of a Linear "OpMode". An OpMode is a 'program' that runs
- * in either the autonomous or the TeleOp period of an FTC match. The names of OpModes appear on
- * the menu of the FTC Driver Station. When an selection is made from the menu, the corresponding
- * OpMode class is instantiated on the Robot Controller and executed.
- *
- * Remove the @Disabled annotation on the next line or two (if present) to add this OpMode to the
- * Driver Station OpMode list, or add a @Disabled annotation to prevent this OpMode from being
- * added to the Driver Station.
- */
-@Autonomous
+@Autonomous(name = "Red Far", group = "Red")
+public class BlueAuto_Far_Red extends BlueBase {
 
-public class BlueAuto_Far_Red extends LinearOpMode {
-    private DcMotor left_wheel, right_wheel, launcher_motor, gate_motor;
-    private Servo arm_servo;
+    // ========== TUNING CONSTANTS – change these to affect behavior ==========
+    private static final double DRIVE_POWER = 0.8;                            // TUNE: Drive power (0-1)
+    private static final int DRIVE_INITIAL_MS = 1750;                         // TUNE: Distance from start to first turn (ms)
+    private static final int DRIVE_APPROACH_MS = 500;                         // TUNE: Approach distance to shooting spot (ms)
+    private static final TurnDirection TURN_DIRECTION = TurnDirection.RIGHT;  // TUNE: toward GOAL
+    private static final int TURN_TO_GOAL_DEG = 68;                           // TUNE: Angle toward GOAL, then face for shot (deg)
 
-
+    public BlueAuto_Far_Red() {
+        turnSlowMultiplier = 2;  // TUNE: 2 = robot turns slow; 1 = normal
+    }
 
     @Override
-    public void runOpMode() {
-        left_wheel = hardwareMap.get(DcMotor.class, "left_wheel");
-        right_wheel = hardwareMap.get(DcMotor.class, "right_wheel");
-        launcher_motor = hardwareMap.get(DcMotor.class, "launcher_motor");
-        gate_motor = hardwareMap.get(DcMotor.class, "gate_motor");
-        arm_servo = hardwareMap.get(Servo.class, "arm_servo");
-
-        //MOTOR DIRECTIONS ARE OPPOSITE TO SIDE
-        left_wheel.setDirection(DcMotorSimple.Direction.REVERSE);
-        right_wheel.setDirection(DcMotorSimple.Direction.FORWARD);
-        launcher_motor.setDirection(DcMotorSimple.Direction.REVERSE);
-        gate_motor.setDirection(DcMotorSimple.Direction.REVERSE);
-
-        //BREAK BEHAVIOR
-        left_wheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        right_wheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        launcher_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        gate_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        left_wheel.setPower(0);
-        right_wheel.setPower(0);
-        //VARS
-        boolean isForward = false;
-
-        left_wheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        right_wheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        telemetry.addData("Status", "Initialized");
-        telemetry.update();
-        waitForStart();
-
-        if (opModeIsActive()) {
-            driveRobot(.8,"forward",1750);
-            turnRobot("right", 68);
-            driveRobot(.8, "forward",500);
-            turnRobot("right",68);
-            shoot();
-        }
-    }
-    int calculateTurnTime(int degrees) {
-        int baseTime = (degrees*300)/90;
-        if (degrees > 180) {
-            baseTime = (int)(baseTime*.94);
-        }
-        else if (degrees > 90) {
-            baseTime = (int)(baseTime*.96);
-        }
-        return baseTime*2;
-    }
-    void turnRobot(String direction, int degrees) {
-        double power = .5;
-        int turnTime = calculateTurnTime(degrees);
-        if (direction.equalsIgnoreCase("left")) {
-            left_wheel.setPower(-power);
-            right_wheel.setPower(power);
-        }
-        else {
-            left_wheel.setPower(power);
-            right_wheel.setPower(-power);
-        }
-        sleep(turnTime);
-        left_wheel.setPower(0);
-        right_wheel.setPower(0);
-    }
-    void shoot() {
-        final double LAUNCH_MAIN_POWER = 0.78;
-        final double GATE_POWER = .75;
-
-        launcher_motor.setPower(LAUNCH_MAIN_POWER);
-        sleep(4000);
-
-        arm_servo.setPosition(-.5);
-        //1st
-        gate_motor.setPower(GATE_POWER);
-        sleep(2500);
-        sleep(750);
-        //2nd
-        arm_servo.setPosition(1); // arm
-        sleep(2750);
-        arm_servo.setPosition(-.5);
-        sleep(750);
-        gate_motor.setPower(0);
-        //3rd
-        arm_servo.setPosition(1); // arm
-        sleep(2750);
-        gate_motor.setPower(GATE_POWER);
-        arm_servo.setPosition(-.5);
-        sleep(500);
-        arm_servo.setPosition(1);
-        sleep(2750);
-        arm_servo.setPosition(-.5);
-        sleep(1000);
-        gate_motor.setPower(0);
-    }
-    void driveRobot(double power, String direction, int time) {
-        telemetry.update();
-        if (direction.equalsIgnoreCase("reverse")) {
-            left_wheel.setPower(-power);
-            right_wheel.setPower(-power);
-        }
-        else {
-                left_wheel.setPower(power);
-                right_wheel.setPower(power);
-            }
-        sleep(time);
-        left_wheel.setPower(0);
-        right_wheel.setPower(0);
-
+    protected void runAutoSequence() {
+        driveRobot(DRIVE_POWER, DriveDirection.FORWARD, DRIVE_INITIAL_MS);
+        turnRobot(TURN_DIRECTION, TURN_TO_GOAL_DEG);
+        driveRobot(DRIVE_POWER, DriveDirection.FORWARD, DRIVE_APPROACH_MS);
+        turnRobot(TURN_DIRECTION, TURN_TO_GOAL_DEG);
+        shoot();
     }
 }
