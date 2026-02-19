@@ -19,6 +19,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import org.firstinspires.ftc.teamcode.TurnDirection;
+import org.firstinspires.ftc.teamcode.DriveDirection;
 
 @Autonomous(name = "Blue Close", group = "Blue")
 public class BlueAuto_Close extends BlueBase {

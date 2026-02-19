@@ -1,6 +1,12 @@
 package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+enum Mode {
+    SHORT,
+    FAR,
+    OFF
+}
+
 @TeleOp(name = "Blue TeleOp", group = "Blue")
 public class BlueMain extends BlueBase {
 

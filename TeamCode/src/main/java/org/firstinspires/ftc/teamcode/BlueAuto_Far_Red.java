@@ -18,6 +18,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 */
 package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import org.firstinspires.ftc.teamcode.TurnDirection;
+import org.firstinspires.ftc.teamcode.DriveDirection;
 
 @Autonomous(name = "Red Far", group = "Red")
 public class BlueAuto_Far_Red extends BlueBase {
@@ -26,7 +28,6 @@ public class BlueAuto_Far_Red extends BlueBase {
     private static final double DRIVE_POWER = 0.8;                            // TUNE: Drive power (0-1)
     private static final int DRIVE_INITIAL_MS = 1750;                         // TUNE: Distance from start to first turn (ms)
     private static final int DRIVE_APPROACH_MS = 500;                         // TUNE: Approach distance to shooting spot (ms)
-    private static final TurnDirection TURN_DIRECTION = TurnDirection.RIGHT;  // TUNE: toward GOAL
     private static final int TURN_TO_GOAL_DEG = 68;                           // TUNE: Angle toward GOAL, then face for shot (deg)
 
     public BlueAuto_Far_Red() {
@@ -36,9 +37,9 @@ public class BlueAuto_Far_Red extends BlueBase {
     @Override
     protected void runAutoSequence() {
         driveRobot(DRIVE_POWER, DriveDirection.FORWARD, DRIVE_INITIAL_MS);
-        turnRobot(TURN_DIRECTION, TURN_TO_GOAL_DEG);
+        turnRobot(TurnDirection.RIGHT, TURN_TO_GOAL_DEG);
         driveRobot(DRIVE_POWER, DriveDirection.FORWARD, DRIVE_APPROACH_MS);
-        turnRobot(TURN_DIRECTION, TURN_TO_GOAL_DEG);
+        turnRobot(TurnDirection.RIGHT, TURN_TO_GOAL_DEG);
         shoot();
     }
 }
