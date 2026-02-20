@@ -26,7 +26,7 @@ public class BlueAuto_Far_Red extends BlueBase {
 
     // ========== TUNING CONSTANTS – change these to affect behavior ==========
     private static final double DRIVE_POWER = 0.8;                            // TUNE: Drive power (0-1)
-    private static final int DRIVE_INITIAL_MS = 1750;                         // TUNE: Distance from start to first turn (ms)
+    private static final int DRIVE_INITIAL_MS = 2250;                         // TUNE: Distance from start to first turn (ms)
     private static final int DRIVE_APPROACH_MS = 500;                         // TUNE: Approach distance to shooting spot (ms)
     private static final int TURN_TO_GOAL_DEG = 68;                           // TUNE: Angle toward GOAL, then face for shot (deg)
 
@@ -38,8 +38,8 @@ public class BlueAuto_Far_Red extends BlueBase {
     protected void runAutoSequence() {
         driveRobot(DRIVE_POWER, DriveDirection.FORWARD, DRIVE_INITIAL_MS);
         turnRobot(TurnDirection.RIGHT, TURN_TO_GOAL_DEG);
+        sleep(500);
         driveRobot(DRIVE_POWER, DriveDirection.FORWARD, DRIVE_APPROACH_MS);
-        turnRobot(TurnDirection.RIGHT, TURN_TO_GOAL_DEG);
         shoot();
     }
 }
