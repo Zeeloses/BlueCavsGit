@@ -43,9 +43,9 @@ public abstract class BlueBase extends LinearOpMode {
     public static final double ARM_FEED = -0.5;                   // Arm servo position when feeding ball (-1 to 1).
     public static final double ARM_LOAD = 1.0;                    // Arm servo position when loading next ball (-1 to 1).
     protected static final double ARM_INIT = -1.0;                // Arm position at auto start (ready for 1st ball).
-    protected static final int NUM_BALLS = 3;                     // Number of pre-loaded balls to shoot in autonomous.
+    protected static final int NUM_BALLS = 4;                     // Number of pre-loaded balls to shoot in autonomous.
     public static final double LAUNCH_TARGET_RPM = 130;           // Target RPM before feeding. Red LED on when in range.
-    public static final double LAUNCH_RPM_TOLERANCE = 20;         // ±RPM window for "ready" (e.g. 130±20 = 130–150).
+    public static final double LAUNCH_RPM_TOLERANCE = 25;         // ±RPM window for "ready" (e.g. 130±20 = 130–150).
 
     /** Returns true if rpm is within LAUNCH_RPM_TOLERANCE above target. Used by shoot, waitForLauncherReady, TeleOp. */
     protected static boolean isRPMInRange(double rpm, double targetRPM) {
@@ -159,9 +159,9 @@ public abstract class BlueBase extends LinearOpMode {
 
         for (int i = 0; i < NUM_BALLS; i++) {
             if (i > 0) {
+                waitForLauncherReady();
                 stopGate();
                 cycleArm();
-                waitForLauncherReady();
             }
             feedOneBall();
         }
@@ -220,7 +220,7 @@ public abstract class BlueBase extends LinearOpMode {
             if (isRPMInRange(getLauncherRPM(), LAUNCH_TARGET_RPM)) {
                 return;
             }
-            sleep(20);
+            sleep(50);
         }
     }
 
